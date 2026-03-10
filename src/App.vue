@@ -1,19 +1,38 @@
 <script setup>
+import { onMounted } from 'vue'
 import Column from "@/components/Column.vue";
+import { useNotesStore } from '@/stores/notesStore'
+
+const store = useNotesStore()
+
+onMounted(() => {
+  store.logStore()
+})
 </script>
 
 <template>
   <div class="app">
     <h1>Мои заметки</h1>
     <div class="columns">
-      <Column column-id="1" />
-      <Column column-id="2" />
-      <Column column-id="3" />
+      <Column :column-id="1" />
+      <Column :column-id="2" />
+      <Column :column-id="3" />
     </div>
   </div>
 </template>
 
 <style scoped>
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
 
 .columns {
   display: flex;

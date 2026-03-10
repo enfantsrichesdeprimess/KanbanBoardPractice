@@ -1,22 +1,43 @@
 <template>
   <div class="column">
     <h2>Колонка {{ columnId }}</h2>
+    <div class="cards-container">
+      <Card
+          v-for="card in cards"
+          :key="card.id"
+          :id="card.id"
+          :card-title="card.cardTitle"
+          :points="card.points"
+      />
+      <div v-if="!cards.length" class="empty-message">
+        Нет карточек
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
-  columnId: Number,
+import { computed } from 'vue'
+import { useNotesStore } from '@/stores/notesStore'
+import Card from '@/components/Card.vue'
+
+const props = defineProps({
+  columnId: {
+    type: Number,
+    required: true
+  }
+})
+
+const store = useNotesStore()
+
+
+const cards = computed(() => {
+  const column = store.columns.find(col => col.id === props.columnId)
+  return column ? column.cards : []
 })
 </script>
 
 <style scoped>
-h1 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #333;
-}
-
 .column {
   flex: 1;
   min-height: 400px;
@@ -31,5 +52,16 @@ h1 {
   color: #666;
   margin-bottom: 20px;
   font-size: 1.2rem;
+}
+
+.cards-container {
+  min-height: 300px;
+}
+
+.empty-message {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 20px;
 }
 </style>
