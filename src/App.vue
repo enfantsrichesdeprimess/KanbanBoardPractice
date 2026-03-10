@@ -15,4 +15,9 @@ import Column from "@/components/Column.vue";
 
 <style scoped>
 
+.columns {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
 </style>
