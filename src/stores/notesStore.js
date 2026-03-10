@@ -1,48 +1,144 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+
+const STORAGE_KEY = 'notes-app-data'
 
 export const useNotesStore = defineStore('notes', () => {
-    const columns = ref([
-        {
-            id: 1,
-            maxCards: 3,
-            cards: [
-                {
-                    id: 1,
-                    cardTitle: 'План на сегодня',
-                    points: [
-                        { id: 1, title: 'Позавтракать', isReady: false },
-                        { id: 2, title: 'Сделать зарядку', isReady: true },
-                        { id: 3, title: 'Почитать книгу', isReady: false }
-                    ],
-                    completedAt: null
-                }
-            ]
-        },
-        {
-            id: 2,
-            maxCards: 5,
-            cards: [
-                {
-                    id: 2,
-                    cardTitle: 'Список покупок',
-                    points: [
-                        { id: 4, title: 'Молоко', isReady: false },
-                        { id: 5, title: 'Хлеб', isReady: true },
-                        { id: 6, title: 'Яйца', isReady: false },
-                        { id: 7, title: 'Сыр', isReady: false },
-                        { id: 8, title: 'Помидоры', isReady: false }
-                    ],
-                    completedAt: null
-                }
-            ]
-        },
-        {
-            id: 3,
-            maxCards: Infinity,
-            cards: []
+    const loadInitialData = () => {
+        const saved = localStorage.getItem(STORAGE_KEY)
+        if (saved) {
+            try {
+                return JSON.parse(saved)
+            } catch (e) {
+                console.error('Ошибка загрузки данных:', e)
+            }
         }
-    ])
+
+        return [
+            {
+                id: 1,
+                maxCards: 3,
+                cards: [
+                    {
+                        id: 1,
+                        cardTitle: 'План на сегодня',
+                        points: [
+                            { id: 1, title: 'сделать практику уже наконец то', isReady: false },
+                            { id: 2, title: 'сделать практику еще раз', isReady: true },
+                            { id: 3, title: 'поиграть в доту на бруде вместо практики', isReady: false },
+                            { id: 4, title: 'или в дедлок может быть', isReady: false }
+                        ],
+                        completedAt: null
+                    },
+                    {
+                        id: 2,
+                        cardTitle: 'Спортивные цели',
+                        points: [
+                            { id: 5, title: 'Пробежка 5 км', isReady: true },
+                            { id: 6, title: 'Отжимания 50 раз', isReady: false },
+                            { id: 7, title: 'Растяжка 15 мин', isReady: false },
+
+                        ],
+                        completedAt: null
+                    },
+                    {
+                        id: 3,
+                        cardTitle: 'Чтение',
+                        points: [
+                            { id: 8, title: 'Прочитать 20 страниц', isReady: false },
+                            { id: 9, title: 'Выписать цитаты', isReady: false },
+                            { id: 10, title: 'Написать конспект', isReady: false }
+                        ],
+                        completedAt: null
+                    }
+                ]
+            },
+            {
+                id: 2,
+                maxCards: 5,
+                cards: [
+                    {
+                        id: 4,
+                        cardTitle: 'Список покупок',
+                        points: [
+                            { id: 11, title: 'Молоко', isReady: false },
+                            { id: 12, title: 'Хлеб', isReady: true },
+                            { id: 13, title: 'Яйца', isReady: false },
+                            { id: 14, title: 'Сыр', isReady: false },
+                            { id: 15, title: 'Помидоры', isReady: false }
+                        ],
+                        completedAt: null
+                    },
+                    {
+                        id: 5,
+                        cardTitle: 'Рабочие задачи',
+                        points: [
+                            { id: 16, title: 'Ответить на письма', isReady: true },
+                            { id: 17, title: 'Созвон с клиентом', isReady: true },
+                            { id: 18, title: 'Написать отчет', isReady: false },
+                            { id: 19, title: 'План на неделю', isReady: false },
+                            { id: 20, title: 'Обновить документацию', isReady: false }
+                        ],
+                        completedAt: null
+                    },
+                    {
+                        id: 6,
+                        cardTitle: 'Домашние дела',
+                        points: [
+                            { id: 21, title: 'Помыть посуду', isReady: true },
+                            { id: 22, title: 'Пропылесосить', isReady: false },
+                            { id: 23, title: 'Полить цветы', isReady: true },
+                            { id: 24, title: 'Вынести мусор', isReady: false },
+                            { id: 25, title: 'Сменить постельное', isReady: false }
+                        ],
+                        completedAt: null
+                    }
+                ]
+            },
+            {
+                id: 3,
+                maxCards: Infinity,
+                cards: [
+                    {
+                        id: 7,
+                        cardTitle: 'Завершённый проект',
+                        points: [
+                            { id: 26, title: 'Сделать макет', isReady: true },
+                            { id: 27, title: 'Написать код', isReady: true },
+                            { id: 28, title: 'Протестировать', isReady: true },
+                            { id: 29, title: 'Задеплоить', isReady: true },
+                            { id: 30, title: 'Сдать заказчику', isReady: true }
+                        ],
+                        completedAt: '2024-03-10T14:30:00.000Z'
+                    },
+                    {
+                        id: 8,
+                        cardTitle: 'Достигнутая цель',
+                        points: [
+                            { id: 31, title: 'Выучить Vue 3', isReady: true },
+                            { id: 32, title: 'Сделать проект', isReady: true },
+                            { id: 33, title: 'Защитить работу', isReady: true }
+                        ],
+                        completedAt: '2026-03-09T11:20:00.000Z'
+                    },
+                    {
+                        id: 9,
+                        cardTitle: 'Марафон',
+                        points: [
+                            { id: 34, title: 'Неделя 1', isReady: true },
+                            { id: 35, title: 'Неделя 2', isReady: true },
+                            { id: 36, title: 'Неделя 3', isReady: true },
+                            { id: 37, title: 'Неделя 4', isReady: true },
+                            { id: 38, title: 'Финиш', isReady: true }
+                        ],
+                        completedAt: '2026-03-08T09:15:00.000Z'
+                    }
+                ]
+            }
+        ]
+    }
+
+    const columns = ref(loadInitialData())
 
     const isColumn1Locked = computed(() => {
         const column2 = columns.value.find(c => c.id === 2)
@@ -76,12 +172,9 @@ export const useNotesStore = defineStore('notes', () => {
 
         fromColumn.cards.splice(cardIndex, 1)
         toColumn.cards.push(card)
-
-        console.log(`Карточка "${card.cardTitle}" перемещена из колонки ${fromColumnId} в колонку ${toColumnId}`)
         return true
     }
 
-    // Проверяем и перемещаем карточку если нужно
     const checkAndMoveCard = (cardId) => {
         const found = findCard(cardId)
         if (!found) return
@@ -100,8 +193,6 @@ export const useNotesStore = defineStore('notes', () => {
         if (percent > 50 && column.id === 1) {
             if (!isColumn1Locked.value) {
                 moveCard(card, 1, 2)
-            } else {
-                console.log('Первая колонка заблокирована, карточка остаётся на месте')
             }
             return
         }
@@ -114,7 +205,6 @@ export const useNotesStore = defineStore('notes', () => {
         const { column, card } = found
 
         if (column.id === 1 && isColumn1Locked.value) {
-            console.log(' Нельзя редактировать карточки в заблокированной колонке')
             return
         }
 
@@ -122,21 +212,20 @@ export const useNotesStore = defineStore('notes', () => {
         if (!point) return
 
         point.isReady = !point.isReady
-        console.log(`Пункт ${pointId} в карточке ${cardId} теперь:`, point.isReady)
         checkAndMoveCard(cardId)
     }
 
-    const logStore = () => {
-        console.log('Состояние store:')
-        console.log(`Первая колонка ${isColumn1Locked.value ? 'ЗАБЛОКИРОВАНА' : 'доступна'}`)
-        columns.value.forEach(col => {
-            console.log(`Колонка ${col.id}: ${col.cards.length}/${col.maxCards === Infinity ? '∞' : col.maxCards} карточек`)
-            col.cards.forEach(card => {
-                const percent = getCompletionPercent(card)
-                console.log(`  "${card.cardTitle}" - ${percent}% ${card.completedAt ? '(завершена)' : ''}`)
-            })
-        })
+    const saveToLocalStorage = () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(columns.value))
     }
 
-    return { columns, togglePoint, logStore, isColumn1Locked }
+    watch(columns, () => {
+        saveToLocalStorage()
+    }, { deep: true })
+
+    return {
+        columns,
+        togglePoint,
+        isColumn1Locked
+    }
 })

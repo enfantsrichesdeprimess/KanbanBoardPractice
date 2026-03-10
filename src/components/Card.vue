@@ -1,6 +1,7 @@
 <template>
   <div class="card" :class="{ locked: isLocked }">
     <h3 class="card-title">{{ cardTitle }}</h3>
+
     <ul class="points-list">
       <li
           v-for="point in points"
@@ -19,20 +20,23 @@
       </li>
     </ul>
 
-    <div class="progress-bar">
-      <div
-          class="progress-fill"
-          :style="{ width: `${completionPercent}%` }"
-      ></div>
-      <span class="progress-text">{{ completionPercent }}%</span>
+    <div class="progress-section">
+      <div class="progress-bar">
+        <div
+            class="progress-fill"
+            :style="{ width: `${completionPercent}%` }"
+        ></div>
+      </div>
+      <span class="progress-percent">{{ completionPercent }}%</span>
     </div>
 
-    <div v-if="completedAt" class="completion-date">
-      Завершена: {{ formatDate(completedAt) }}
+    <div v-if="completedAt" class="completion-badge">
+      <span class="completion-icon">✅</span>
+      <span class="completion-date">{{ formatDate(completedAt) }}</span>
     </div>
 
-    <div v-if="isLocked" class="card-lock-message">
-      Редактирование заблокировано
+    <div v-if="isLocked" class="lock-overlay">
+      <span class="lock-text">Колонка заблокирована</span>
     </div>
   </div>
 </template>
@@ -77,52 +81,48 @@ const formatDate = (dateString) => {
 <style scoped>
 .card {
   background: white;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 16px;
+  padding: 20px;
   margin-bottom: 16px;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  transition: all 0.2s ease;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
+  overflow: hidden;
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
 .card.locked {
-  opacity: 0.7;
+  opacity: 0.75;
   background: #f8f9fa;
   border-color: #ffa8a8;
 }
 
-.card.locked:hover {
-  transform: none;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
 .card-title {
-  margin: 0 0 12px 0;
-  font-size: 1.1rem;
+  margin: 0 0 16px 0;
+  font-size: 1.2rem;
   color: #2c3e50;
   font-weight: 600;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f1f3f5;
 }
 
 .points-list {
   list-style: none;
   padding: 0;
-  margin: 0 0 16px 0;
+  margin: 0 0 20px 0;
 }
 
 .point-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px dashed #f5f5f5;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #f1f3f5;
   transition: opacity 0.2s;
 }
 
@@ -131,73 +131,115 @@ const formatDate = (dateString) => {
 }
 
 .point-item.completed .point-text {
-  color: #999;
+  color: #adb5bd;
   text-decoration: line-through;
 }
 
 .point-checkbox {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
-  accent-color: #4caf50;
+  accent-color: #40c057;
+  transition: transform 0.2s;
+}
+
+.point-checkbox:hover {
+  transform: scale(1.1);
 }
 
 .point-checkbox:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+  transform: none;
 }
 
 .point-text {
   flex: 1;
-  color: #444;
-  font-size: 0.95rem;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.progress-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .progress-bar {
-  height: 20px;
-  background: #f0f0f0;
-  border-radius: 10px;
+  flex: 1;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
   overflow: hidden;
-  position: relative;
-  margin: 8px 0;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4caf50, #8bc34a);
-  transition: width 0.3s ease;
-  border-radius: 10px;
+  background: linear-gradient(90deg, #40c057, #82c91e);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
 }
 
-.progress-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #333;
-  font-size: 0.7rem;
+.progress-percent {
+  font-size: 0.9rem;
   font-weight: 600;
-  text-shadow: 0 0 2px white;
+  color: #40c057;
+  min-width: 45px;
+  text-align: right;
+}
+
+.completion-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #ebfbee;
+  border-radius: 8px;
+  border: 1px solid #b2f2bb;
+  margin-top: 12px;
+}
+
+.completion-icon {
+  font-size: 1.2rem;
 }
 
 .completion-date {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid #e0e0e0;
-  color: #28a745;
-  font-size: 0.8rem;
-  text-align: right;
-  font-style: italic;
+  color: #2b8a3e;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
-.card-lock-message {
-  margin-top: 10px;
-  padding: 6px;
-  background: #fff3f3;
-  border-radius: 4px;
+.lock-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.card.locked .lock-overlay {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.lock-text {
   color: #c92a2a;
-  font-size: 0.8rem;
-  text-align: center;
+  font-size: 0.9rem;
   font-weight: 500;
+  background: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>
