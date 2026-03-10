@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 export const useNotesStore = defineStore('notes', () => {
     const columns = ref([
@@ -44,6 +44,11 @@ export const useNotesStore = defineStore('notes', () => {
         }
     ])
 
+    const isColumn1Locked = computed(() => {
+        const column2 = columns.value.find(c => c.id === 2)
+        return column2 && column2.cards.length >= column2.maxCards
+    })
+
     const getCompletionPercent = (card) => {
         if (!card.points.length) return 0
         const completed = card.points.filter(p => p.isReady).length
@@ -70,13 +75,13 @@ export const useNotesStore = defineStore('notes', () => {
         if (cardIndex === -1) return false
 
         fromColumn.cards.splice(cardIndex, 1)
-
         toColumn.cards.push(card)
 
         console.log(`Карточка "${card.cardTitle}" перемещена из колонки ${fromColumnId} в колонку ${toColumnId}`)
         return true
     }
 
+    // Проверяем и перемещаем карточку если нужно
     const checkAndMoveCard = (cardId) => {
         const found = findCard(cardId)
         if (!found) return
@@ -87,13 +92,17 @@ export const useNotesStore = defineStore('notes', () => {
         if (column.id === 3) return
 
         if (percent === 100 && column.id !== 3) {
-            card.completedAt = new Date().toISOString()  // записываем дату завершения
+            card.completedAt = new Date().toISOString()
             moveCard(card, column.id, 3)
             return
         }
 
         if (percent > 50 && column.id === 1) {
-            moveCard(card, 1, 2)
+            if (!isColumn1Locked.value) {
+                moveCard(card, 1, 2)
+            } else {
+                console.log('Первая колонка заблокирована, карточка остаётся на месте')
+            }
             return
         }
     }
@@ -102,18 +111,24 @@ export const useNotesStore = defineStore('notes', () => {
         const found = findCard(cardId)
         if (!found) return
 
-        const { card } = found
+        const { column, card } = found
+
+        if (column.id === 1 && isColumn1Locked.value) {
+            console.log(' Нельзя редактировать карточки в заблокированной колонке')
+            return
+        }
+
         const point = card.points.find(p => p.id === pointId)
         if (!point) return
 
         point.isReady = !point.isReady
         console.log(`Пункт ${pointId} в карточке ${cardId} теперь:`, point.isReady)
-
         checkAndMoveCard(cardId)
     }
 
     const logStore = () => {
         console.log('Состояние store:')
+        console.log(`Первая колонка ${isColumn1Locked.value ? 'ЗАБЛОКИРОВАНА' : 'доступна'}`)
         columns.value.forEach(col => {
             console.log(`Колонка ${col.id}: ${col.cards.length}/${col.maxCards === Infinity ? '∞' : col.maxCards} карточек`)
             col.cards.forEach(card => {
@@ -123,5 +138,5 @@ export const useNotesStore = defineStore('notes', () => {
         })
     }
 
-    return { columns, togglePoint, logStore }
+    return { columns, togglePoint, logStore, isColumn1Locked }
 })

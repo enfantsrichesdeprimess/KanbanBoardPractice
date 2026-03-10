@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div class="card" :class="{ locked: isLocked }">
     <h3 class="card-title">{{ cardTitle }}</h3>
     <ul class="points-list">
       <li
@@ -13,6 +13,7 @@
             :checked="point.isReady"
             @change="togglePoint(point.id)"
             class="point-checkbox"
+            :disabled="isLocked"
         />
         <span class="point-text">{{ point.title }}</span>
       </li>
@@ -29,6 +30,10 @@
     <div v-if="completedAt" class="completion-date">
       Завершена: {{ formatDate(completedAt) }}
     </div>
+
+    <div v-if="isLocked" class="card-lock-message">
+      Редактирование заблокировано
+    </div>
   </div>
 </template>
 
@@ -40,7 +45,8 @@ const props = defineProps({
   cardTitle: String,
   points: Array,
   id: Number,
-  completedAt: [String, null]
+  completedAt: [String, null],
+  isLocked: Boolean
 })
 
 const store = useNotesStore()
@@ -52,6 +58,7 @@ const completionPercent = computed(() => {
 })
 
 const togglePoint = (pointId) => {
+  if (props.isLocked) return
   store.togglePoint(props.id, pointId)
 }
 
@@ -76,11 +83,23 @@ const formatDate = (dateString) => {
   border: 1px solid #e0e0e0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .card:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   transform: translateY(-2px);
+}
+
+.card.locked {
+  opacity: 0.7;
+  background: #f8f9fa;
+  border-color: #ffa8a8;
+}
+
+.card.locked:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .card-title {
@@ -121,6 +140,11 @@ const formatDate = (dateString) => {
   height: 18px;
   cursor: pointer;
   accent-color: #4caf50;
+}
+
+.point-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .point-text {
@@ -164,5 +188,16 @@ const formatDate = (dateString) => {
   font-size: 0.8rem;
   text-align: right;
   font-style: italic;
+}
+
+.card-lock-message {
+  margin-top: 10px;
+  padding: 6px;
+  background: #fff3f3;
+  border-radius: 4px;
+  color: #c92a2a;
+  font-size: 0.8rem;
+  text-align: center;
+  font-weight: 500;
 }
 </style>
