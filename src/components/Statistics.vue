@@ -1,28 +1,42 @@
 <template>
-  <div class="statistics">
-    <div class="stat-card warning">
+  <div class="statistics-panel">
+    <div class="stat-card">
       <div class="stat-content">
-        <div class="stat-label">Просроченные карточки</div>
-        <div class="stat-value">{{ overdueCount }}</div>
-        <div class="stat-hint">(больше 1 дня)</div>
+        <div class="stat-label">Всего задач</div>
+        <div class="stat-value">{{ totalCards }}</div>
       </div>
     </div>
 
-    <div class="stat-card success">
+    <div class="stat-card">
       <div class="stat-content">
-        <div class="stat-label">Выполненные задачи</div>
-        <div class="stat-value">{{ taskStats.completed }} / {{ taskStats.total }}</div>
-        <div class="stat-hint">{{ taskStats.ratio }}% выполнено</div>
+        <div class="stat-label">Запланировано</div>
+        <div class="stat-value">{{ plannedCards }}</div>
       </div>
     </div>
 
-    <div class="stat-card info">
+    <div class="stat-card">
       <div class="stat-content">
-        <div class="stat-label">Прогресс</div>
-        <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: `${taskStats.ratio}%` }"></div>
+        <div class="stat-label">В работе</div>
+        <div class="stat-value">{{ inProgressCards }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-label">Тестирование</div>
+        <div class="stat-value">{{ testingCards }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-label">Выполнено</div>
+        <div class="stat-value">{{ completedCards }}</div>
+        <div class="stat-hint">
+          <span :class="{ 'text-success': onTimeCount, 'text-danger': overdueCount }">
+            {{ onTimeCount }} в срок / {{ overdueCount }} просрочено
+          </span>
         </div>
-        <div class="stat-hint">{{ taskStats.ratio }}% задач выполнено</div>
       </div>
     </div>
   </div>
@@ -30,54 +44,49 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useNotesStore } from '@/stores/notesStore'
+import { useKanbanStore } from '@/stores/kanbanStore'
 
-const store = useNotesStore()
+const store = useKanbanStore()
 
-const overdueCount = computed(() => store.overdueCardsCount)
-const taskStats = computed(() => store.taskStats)
+const totalCards = computed(() => {
+  return store.columns.reduce((sum, col) => sum + col.cards.length, 0)
+})
+
+const plannedCards = computed(() => store.columns[0]?.cards.length || 0)
+const inProgressCards = computed(() => store.columns[1]?.cards.length || 0)
+const testingCards = computed(() => store.columns[2]?.cards.length || 0)
+const completedCards = computed(() => store.columns[3]?.cards.length || 0)
+
+const onTimeCount = computed(() => {
+  return store.columns[3]?.cards.filter(card => !store.checkDeadline(card)).length || 0
+})
+
+const overdueCount = computed(() => {
+  return store.columns[3]?.cards.filter(card => store.checkDeadline(card)).length || 0
+})
 </script>
 
 <style scoped>
-.statistics {
+.statistics-panel {
   display: flex;
-  gap: 20px;
-  margin: 20px 0;
-  padding: 20px;
+  gap: 16px;
+  margin-bottom: 30px;
+  padding: 16px;
   background: white;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .stat-card {
-  flex: 1;
-  min-width: 200px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #f8f9fa;
   border-radius: 12px;
-  transition: transform 0.2s;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-}
-
-.stat-card.warning {
-  background: #fff3f3;
-  border: 1px solid #ffc9c9;
-}
-
-.stat-card.success {
-  background: #ebfbee;
-  border: 1px solid #b2f2bb;
-}
-
-.stat-card.info {
-  background: #e7f5ff;
-  border: 1px solid #a5d8ff;
+  min-width: 150px;
 }
 
 .stat-content {
@@ -85,46 +94,39 @@ const taskStats = computed(() => store.taskStats)
 }
 
 .stat-label {
-  color: #495057;
-  font-size: 0.9rem;
+  color: #868e96;
+  font-size: 0.8rem;
   margin-bottom: 4px;
 }
 
 .stat-value {
   color: #2c3e50;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.2;
 }
 
 .stat-hint {
-  color: #868e96;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   margin-top: 4px;
 }
 
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 8px 0;
+.text-success {
+  color: #40c057;
 }
 
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #4caf50, #82c91e);
-  transition: width 0.3s ease;
+.text-danger {
+  color: #fa5252;
 }
 
 @media (max-width: 768px) {
-  .statistics {
-    flex-direction: column;
+  .stat-card {
+    min-width: 120px;
+    padding: 8px 12px;
   }
 
-  .stat-card {
-    min-width: auto;
+  .stat-value {
+    font-size: 1.2rem;
   }
 }
 </style>
