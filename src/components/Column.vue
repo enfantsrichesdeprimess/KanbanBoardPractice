@@ -25,6 +25,7 @@
             @delete="$emit('delete-card', card.id)"
             @move="onMoveCard"
             @return-to-work="$emit('return-to-work', $event)"
+            @update-checklist="$emit('update-checklist', $event)"
         />
       </div>
 

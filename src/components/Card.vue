@@ -10,6 +10,38 @@
 
     <p class="card-description">{{ card.description }}</p>
 
+    <div v-if="card.checklist && card.checklist.length" class="checklist">
+      <h4 class="checklist-title">Пункты выполнения:</h4>
+      <div class="checklist-items">
+        <div
+            v-for="(item, index) in card.checklist"
+            :key="index"
+            class="checklist-item"
+            :class="{ completed: item.completed }"
+        >
+          <input
+              type="checkbox"
+              :checked="item.completed"
+              @change="toggleChecklistItem(index)"
+              :disabled="columnId === 4 || (columnId === 3 && isMovingToFourth)"
+              class="checklist-checkbox"
+          />
+          <span class="checklist-text">{{ item.text }}</span>
+          <span v-if="item.completed" class="checklist-done">✓</span>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="card.checklist && card.checklist.length" class="checklist-progress">
+      <div class="progress-bar">
+        <div
+            class="progress-fill"
+            :style="{ width: `${completionPercent}%` }"
+        ></div>
+      </div>
+      <span class="progress-text">{{ completionPercent }}%</span>
+    </div>
+
     <div class="card-dates">
       <div class="date-item">
         <span class="date-label">Создано:</span>
@@ -33,7 +65,6 @@
     </div>
 
     <div class="card-footer">
-      <!-- Кнопки перемещения в зависимости от колонки -->
       <div v-if="columnId === 1" class="move-buttons">
         <button @click="moveToColumn(2)" class="move-btn">→ В работу</button>
       </div>
@@ -43,7 +74,14 @@
       </div>
 
       <div v-else-if="columnId === 3" class="move-buttons">
-        <button @click="moveToColumn(4)" class="move-btn success">→ Выполнено</button>
+        <button
+            @click="moveToColumn(4)"
+            class="move-btn success"
+            :disabled="!allChecklistCompleted"
+            :title="!allChecklistCompleted ? 'Выполните все пункты' : ''"
+        >
+          → Выполнено
+        </button>
         <button @click="promptReturnReason" class="move-btn warning">← В работу</button>
       </div>
 
@@ -69,8 +107,19 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['edit', 'delete', 'move', 'return-to-work'])
+const emit = defineEmits(['edit', 'delete', 'move', 'return-to-work', 'update-checklist'])
 const store = useKanbanStore()
+
+const allChecklistCompleted = computed(() => {
+  if (!props.card.checklist || !props.card.checklist.length) return true
+  return props.card.checklist.every(item => item.completed)
+})
+
+const completionPercent = computed(() => {
+  if (!props.card.checklist || !props.card.checklist.length) return 0
+  const completed = props.card.checklist.filter(item => item.completed).length
+  return Math.round((completed / props.card.checklist.length) * 100)
+})
 
 const isOverdue = computed(() => {
   if (props.columnId === 4) {
@@ -86,6 +135,10 @@ const statusClass = computed(() => {
   return ''
 })
 
+const isMovingToFourth = computed(() => {
+  return false
+})
+
 const formatDate = (dateString) => {
   if (!dateString) return 'Нет даты'
   const date = new Date(dateString)
@@ -99,6 +152,10 @@ const formatDate = (dateString) => {
 }
 
 const moveToColumn = (targetColumnId) => {
+  if (targetColumnId === 4 && !allChecklistCompleted.value) {
+    alert('Нельзя переместить карточку: выполнены не все пункты')
+    return
+  }
   emit('move', { cardId: props.card.id, targetColumnId })
 }
 
@@ -107,6 +164,19 @@ const promptReturnReason = () => {
   if (reason) {
     emit('return-to-work', { cardId: props.card.id, reason })
   }
+}
+
+const toggleChecklistItem = (index) => {
+  const updatedChecklist = [...(props.card.checklist || [])]
+  updatedChecklist[index] = {
+    ...updatedChecklist[index],
+    completed: !updatedChecklist[index].completed
+  }
+
+  emit('update-checklist', {
+    cardId: props.card.id,
+    checklist: updatedChecklist
+  })
 }
 </script>
 
@@ -173,6 +243,95 @@ const promptReturnReason = () => {
   line-height: 1.5;
   margin-bottom: 16px;
   word-break: break-word;
+}
+
+.checklist {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.checklist-title {
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+  color: #495057;
+  font-weight: 600;
+}
+
+.checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #dee2e6;
+}
+
+.checklist-item:last-child {
+  border-bottom: none;
+}
+
+.checklist-item.completed .checklist-text {
+  color: #adb5bd;
+  text-decoration: line-through;
+}
+
+.checklist-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #40c057;
+}
+
+.checklist-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.checklist-text {
+  flex: 1;
+  color: #495057;
+  font-size: 0.95rem;
+}
+
+.checklist-done {
+  color: #40c057;
+  font-weight: bold;
+}
+
+.checklist-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 0 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4c6ef5, #748ffc);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4c6ef5;
+  min-width: 45px;
 }
 
 .card-dates {
@@ -244,12 +403,17 @@ const promptReturnReason = () => {
   transition: background 0.2s;
 }
 
+.move-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .move-btn.success {
   background: #40c057;
   color: white;
 }
 
-.move-btn.success:hover {
+.move-btn.success:hover:not(:disabled) {
   background: #2f9e44;
 }
 

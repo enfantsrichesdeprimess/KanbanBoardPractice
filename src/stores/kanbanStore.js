@@ -76,7 +76,6 @@ export const useKanbanStore = defineStore('kanban', () => {
         }
     }
 
-    // Функция удаления карточки
     const deleteCard = (cardId) => {
         for (const column of columns.value) {
             const cardIndex = column.cards.findIndex(c => c.id === cardId)
@@ -123,6 +122,19 @@ export const useKanbanStore = defineStore('kanban', () => {
     const saveToLocalStorage = () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(columns.value))
     }
+    const updateChecklist = (cardId, checklist) => {
+        for (const column of columns.value) {
+            const cardIndex = column.cards.findIndex(c => c.id === cardId)
+            if (cardIndex !== -1) {
+                column.cards[cardIndex] = {
+                    ...column.cards[cardIndex],
+                    checklist,
+                    updatedAt: new Date().toISOString()
+                }
+                break
+            }
+        }
+    }
 
     watch(columns, () => {
         saveToLocalStorage()
@@ -134,6 +146,7 @@ export const useKanbanStore = defineStore('kanban', () => {
         updateCard,
         deleteCard,
         moveCard,
-        checkDeadline
+        checkDeadline,
+        updateChecklist
     }
 })

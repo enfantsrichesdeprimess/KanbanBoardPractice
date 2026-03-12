@@ -18,9 +18,45 @@
           <label>Описание</label>
           <textarea
               v-model="form.description"
-              rows="4"
+              rows="3"
               placeholder="Введите описание задачи"
           ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Пункты выполнения (мкасимум - 3)</label>
+          <div class="checklist-inputs">
+            <div
+                v-for="(item, index) in form.checklist"
+                :key="index"
+                class="checklist-input-item"
+            >
+              <input
+                  v-model="item.text"
+                  type="text"
+                  :placeholder="`Пункт ${index + 1}`"
+                  class="checklist-input"
+              />
+              <button
+                  v-if="form.checklist.length > 1"
+                  type="button"
+                  class="remove-item-btn"
+                  @click="removeChecklistItem(index)"
+                  title="Удалить пункт"
+              >
+                ✕
+              </button>
+            </div>
+
+            <button
+                v-if="form.checklist.length < 3"
+                type="button"
+                class="add-item-btn"
+                @click="addChecklistItem"
+            >
+              + Добавить пункт
+            </button>
+          </div>
         </div>
 
         <div class="form-group">
@@ -60,6 +96,7 @@ const emit = defineEmits(['close', 'save'])
 const form = ref({
   title: '',
   description: '',
+  checklist: [{ text: '', completed: false }],
   deadline: ''
 })
 
@@ -68,16 +105,32 @@ watch(() => props.card, (newCard) => {
     form.value = {
       title: newCard.title || '',
       description: newCard.description || '',
+      checklist: newCard.checklist && newCard.checklist.length
+          ? newCard.checklist.map(item => ({ text: item.text, completed: item.completed }))
+          : [{ text: '', completed: false }],
       deadline: newCard.deadline ? new Date(newCard.deadline).toISOString().slice(0, 16) : ''
     }
   } else {
     form.value = {
       title: '',
       description: '',
+      checklist: [{ text: '', completed: false }],
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
     }
   }
 }, { immediate: true })
+
+const addChecklistItem = () => {
+  if (form.value.checklist.length < 3) {
+    form.value.checklist.push({ text: '', completed: false })
+  }
+}
+
+const removeChecklistItem = (index) => {
+  if (form.value.checklist.length > 1) {
+    form.value.checklist.splice(index, 1)
+  }
+}
 
 const onSubmit = () => {
   if (!form.value.title.trim()) {
@@ -85,7 +138,20 @@ const onSubmit = () => {
     return
   }
 
-  emit('save', { ...form.value })
+  const checklist = form.value.checklist
+      .filter(item => item.text.trim())
+      .map(item => ({
+        text: item.text.trim(),
+        completed: item.completed || false
+      }))
+
+  emit('save', {
+    title: form.value.title.trim(),
+    description: form.value.description.trim(),
+    checklist: checklist.length ? checklist : null,
+    deadline: form.value.deadline
+  })
+
   emit('close')
 }
 </script>
@@ -109,7 +175,7 @@ const onSubmit = () => {
   border-radius: 16px;
   padding: 24px;
   width: 90%;
-  max-width: 500px;
+  max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -148,6 +214,59 @@ const onSubmit = () => {
   outline: none;
   border-color: #4c6ef5;
   box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.1);
+}
+
+.checklist-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checklist-input-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.checklist-input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.remove-item-btn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: #fff5f5;
+  color: #fa5252;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-item-btn:hover {
+  background: #ffe3e3;
+}
+
+.add-item-btn {
+  padding: 8px;
+  background: #e7f5ff;
+  border: 1px dashed #4c6ef5;
+  border-radius: 6px;
+  color: #4c6ef5;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.add-item-btn:hover {
+  background: #d0ebff;
 }
 
 .modal-actions {

@@ -16,6 +16,7 @@
           @delete-card="handleDeleteCard"
           @move-card="handleMoveCard"
           @return-to-work="handleReturnToWork"
+          @update-checklist="handleUpdateChecklist"
       />
     </div>
 
@@ -42,6 +43,10 @@ const { columns } = storeToRefs(store)
 const showModal = ref(false)
 const editingCard = ref(null)
 
+const handleUpdateChecklist = ({ cardId, checklist }) => {
+  store.updateChecklist(cardId, checklist)
+}
+
 const openCreateModal = () => {
   editingCard.value = null
   showModal.value = true
@@ -59,10 +64,8 @@ const closeModal = () => {
 
 const handleSaveCard = (cardData) => {
   if (editingCard.value) {
-    // Редактирование
     store.updateCard(editingCard.value.id, cardData)
   } else {
-    // Создание
     store.createCard(cardData)
   }
 }
